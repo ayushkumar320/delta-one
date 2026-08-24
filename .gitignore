@@ -1,0 +1,19 @@
+# Go
+bin/
+*.exe
+*.test
+*.out
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Env
+.env
+.env.local
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
