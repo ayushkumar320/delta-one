@@ -11,12 +11,14 @@ import (
 // the gateway trust them; they are never accepted from the public internet
 // because the gateway strips them from inbound requests.
 const (
-	HeaderUserID = "X-User-ID"
-	HeaderRole   = "X-User-Role"
+	HeaderUserID    = "X-User-ID"
+	HeaderUserEmail = "X-User-Email"
+	HeaderRole      = "X-User-Role"
 )
 
 const (
 	userIDKey ctxKey = "user_id"
+	emailKey  ctxKey = "user_email"
 	roleKey   ctxKey = "user_role"
 )
 
@@ -24,6 +26,13 @@ const (
 func UserIDFrom(ctx context.Context) string {
 	id, _ := ctx.Value(userIDKey).(string)
 	return id
+}
+
+// EmailFrom returns the caller's email address, or "" for an anonymous
+// request. Services use it to address notifications without calling auth.
+func EmailFrom(ctx context.Context) string {
+	email, _ := ctx.Value(emailKey).(string)
+	return email
 }
 
 // RoleFrom returns the caller's role, or "" for an anonymous request.
@@ -39,6 +48,7 @@ func Identity(next http.Handler) http.Handler {
 		ctx := r.Context()
 		if id := r.Header.Get(HeaderUserID); id != "" {
 			ctx = context.WithValue(ctx, userIDKey, id)
+			ctx = context.WithValue(ctx, emailKey, r.Header.Get(HeaderUserEmail))
 			ctx = context.WithValue(ctx, roleKey, r.Header.Get(HeaderRole))
 		}
 		next.ServeHTTP(w, r.WithContext(ctx))
