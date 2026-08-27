@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ApiError, api, money } from '../api/client'
 import type { Booking } from '../api/types'
 import { Loading, Problem } from '../components/Feedback'
+import { field, ghostButton, primaryButton } from '../components/ui'
 
 // Tokens the simulated gateway recognises, so the failure paths can be tried
 // from the UI without a real card.
@@ -74,15 +75,15 @@ export function Checkout() {
   const expired = booking.status === 'held' && remaining === 0
 
   return (
-    <section className="checkout">
-      <h1>Checkout</h1>
-      <p className="meta">
+    <section className="mx-auto max-w-lg">
+      <h1 className="text-3xl font-semibold text-strong">Checkout</h1>
+      <p className="mt-1 text-sm text-muted">
         {booking.seats.length} seat{booking.seats.length === 1 ? '' : 's'} for{' '}
         <strong>{booking.event_title}</strong>
       </p>
 
       {booking.status === 'held' && remaining !== null && !expired && (
-        <p className="countdown">
+        <p className="mt-4 text-accent">
           Seats held for <strong>{formatCountdown(remaining)}</strong>
         </p>
       )}
@@ -91,22 +92,22 @@ export function Checkout() {
       )}
       {error && <Problem message={error} />}
 
-      <dl className="summary">
+      <dl className="my-6 rounded-xl border border-edge bg-surface p-4">
         {booking.seats.map((seat) => (
-          <div key={seat.seat_id}>
+          <div key={seat.seat_id} className="flex justify-between py-1">
             <dt>Seat</dt>
             <dd>{money(seat.price_cents)}</dd>
           </div>
         ))}
-        <div className="total">
+        <div className="mt-2 flex justify-between border-t border-edge pt-3 font-semibold text-strong">
           <dt>Total</dt>
           <dd>{money(booking.total_cents)}</dd>
         </div>
       </dl>
 
-      <label className="field">
-        <span>Pay with</span>
-        <select value={card} onChange={(e) => setCard(e.target.value)}>
+      <label className="mb-4 block">
+        <span className="mb-1 block text-sm text-muted">Pay with</span>
+        <select value={card} className={field} onChange={(e) => setCard(e.target.value)}>
           {CARDS.map((option) => (
             <option key={option.token} value={option.token}>
               {option.label}
@@ -115,22 +116,22 @@ export function Checkout() {
         </select>
       </label>
 
-      <div className="actions">
+      <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
-          className="primary"
+          className={primaryButton}
           disabled={paying || expired || booking.status !== 'held'}
           onClick={pay}
         >
           {paying ? 'Charging…' : `Pay ${money(booking.total_cents)}`}
         </button>
         {booking.status === 'held' && (
-          <button type="button" className="ghost" onClick={release}>
+          <button type="button" className={ghostButton} onClick={release}>
             Release seats
           </button>
         )}
         {expired && (
-          <Link className="ghost" to={`/events/${booking.event_id}`}>
+          <Link className={ghostButton} to={`/events/${booking.event_id}`}>
             Back to the seat map
           </Link>
         )}

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ApiError, api, money, when } from '../api/client'
 import type { Event, Seat } from '../api/types'
 import { Loading, Problem } from '../components/Feedback'
+import { primaryButton } from '../components/ui'
 import { useAuth } from '../auth-context'
 
 const MAX_SEATS = 8
@@ -93,29 +94,31 @@ export function EventDetail() {
   if (!event) return <Problem message={error || 'That event could not be found.'} />
 
   return (
-    <section className="event-detail">
-      <header className="page-head">
-        <div>
-          <h1>{event.title}</h1>
-          <p className="meta">
-            {when(event.starts_at)}
-            {event.venue && ` · ${event.venue.name}, ${event.venue.city}`}
-          </p>
-          <p className="blurb">{event.description}</p>
-        </div>
+    <section>
+      <header className="mb-6">
+        <h1 className="text-3xl font-semibold text-strong">{event.title}</h1>
+        <p className="mt-1 text-sm text-muted">
+          {when(event.starts_at)}
+          {event.venue && ` · ${event.venue.name}, ${event.venue.city}`}
+        </p>
+        <p className="mt-3 max-w-2xl">{event.description}</p>
       </header>
 
       {error && <Problem message={error} />}
 
-      <div className="stage">Stage</div>
+      <div className="mx-auto mt-6 mb-8 max-w-lg rounded-b-[40%] border-t-2 border-accent bg-gradient-to-b from-raised to-transparent p-2 text-center text-xs tracking-[0.3em] text-muted uppercase">
+        Stage
+      </div>
 
-      <div className="seatmap">
+      <div className="flex flex-col items-center gap-6">
         {sections.map(([section, rows]) => (
-          <div key={section} className="section">
-            <h3>{section}</h3>
+          <div key={section}>
+            <h3 className="text-center text-xs font-semibold tracking-widest text-muted uppercase">
+              {section}
+            </h3>
             {rows.map(([row, rowSeats]) => (
-              <div key={row} className="row">
-                <span className="row-label">{row}</span>
+              <div key={row} className="mb-1 flex items-center justify-center gap-1.5">
+                <span className="w-5 text-xs text-muted">{row}</span>
                 {rowSeats.map((seat) => {
                   const isTaken = taken.has(seat.id)
                   const isSelected = selected.has(seat.id)
@@ -123,7 +126,7 @@ export function EventDetail() {
                     <button
                       key={seat.id}
                       type="button"
-                      className={`seat${isTaken ? ' taken' : ''}${isSelected ? ' selected' : ''}`}
+                      className={seatClass(isTaken, isSelected)}
                       disabled={isTaken}
                       aria-pressed={isSelected}
                       title={`${section} ${row}${seat.seat_number} · ${money(seat.price_cents)}${
@@ -141,17 +144,18 @@ export function EventDetail() {
         ))}
       </div>
 
-      <div className="selection-bar">
+      <div className="sticky bottom-0 mt-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-edge bg-surface px-5 py-4">
         <div>
-          <strong>{selected.size}</strong> seat{selected.size === 1 ? '' : 's'} selected
-          {selected.size > 0 && <span className="muted"> · {money(total)}</span>}
+          <strong className="text-strong">{selected.size}</strong> seat
+          {selected.size === 1 ? '' : 's'} selected
+          {selected.size > 0 && <span className="text-muted"> · {money(total)}</span>}
           {selected.size === MAX_SEATS && (
-            <span className="muted"> · that&rsquo;s the maximum per booking</span>
+            <span className="text-muted"> · that&rsquo;s the maximum per booking</span>
           )}
         </div>
         <button
           type="button"
-          className="primary"
+          className={primaryButton}
           disabled={selected.size === 0 || holding}
           onClick={hold}
         >
@@ -160,6 +164,14 @@ export function EventDetail() {
       </div>
     </section>
   )
+}
+
+/** A seat's appearance depends only on whether it is taken or selected. */
+function seatClass(isTaken: boolean, isSelected: boolean): string {
+  const base = 'h-8 w-8 rounded-lg border text-xs'
+  if (isTaken) return `${base} cursor-not-allowed border-dashed border-edge text-edge`
+  if (isSelected) return `${base} border-accent bg-accent text-white`
+  return `${base} border-edge bg-raised text-body hover:border-accent`
 }
 
 /** Groups seats into sections, then rows, preserving the API's ordering. */

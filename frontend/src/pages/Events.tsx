@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { api, money, when } from '../api/client'
 import type { Event } from '../api/types'
 import { Empty, Loading, Problem } from '../components/Feedback'
+import { field } from '../components/ui'
 
 export function Events() {
   const [events, setEvents] = useState<Event[]>([])
@@ -30,16 +31,19 @@ export function Events() {
 
   return (
     <section>
-      <div className="page-head">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-6">
         <div>
-          <h1>What&rsquo;s on</h1>
-          <p className="muted">Pick your seats, hold them for ten minutes, pay when ready.</p>
+          <h1 className="text-3xl font-semibold text-strong">What&rsquo;s on</h1>
+          <p className="text-muted">
+            Pick your seats, hold them for ten minutes, pay when ready.
+          </p>
         </div>
         <input
           type="search"
           value={search}
           placeholder="Search events"
           aria-label="Search events"
+          className={`${field} sm:w-64`}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
@@ -50,19 +54,22 @@ export function Events() {
         <Empty message="No events match that search." />
       )}
 
-      <ul className="event-grid">
+      <ul className="grid list-none grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 p-0">
         {events.map((event) => (
           <li key={event.id}>
-            <Link to={`/events/${event.id}`} className="event-card">
-              <h2>{event.title}</h2>
-              <p className="meta">
+            <Link
+              to={`/events/${event.id}`}
+              className="block h-full rounded-xl border border-edge bg-surface p-5 text-body no-underline hover:border-accent"
+            >
+              <h2 className="text-xl font-semibold text-strong">{event.title}</h2>
+              <p className="mt-1 text-sm text-muted">
                 {when(event.starts_at)}
                 {event.venue && ` · ${event.venue.name}, ${event.venue.city}`}
               </p>
-              <p className="blurb">{event.description}</p>
-              <p className="price">
-                From <strong>{money(event.from_cents)}</strong>
-                <span className="muted"> · {event.seat_count} seats</span>
+              <p className="my-3">{event.description}</p>
+              <p>
+                From <strong className="text-strong">{money(event.from_cents)}</strong>
+                <span className="text-muted"> · {event.seat_count} seats</span>
               </p>
             </Link>
           </li>

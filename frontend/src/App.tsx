@@ -32,7 +32,7 @@ export default function App() {
             </RequireAuth>
           }
         />
-        <Route path="*" element={<p className="muted">That page does not exist.</p>} />
+        <Route path="*" element={<p className="text-muted">That page does not exist.</p>} />
       </Route>
     </Routes>
   )

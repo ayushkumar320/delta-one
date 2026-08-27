@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth-context'
 import { Problem } from '../components/Feedback'
+import { field, primaryButton } from '../components/ui'
 
 // Matches domain.MinPasswordLength in the auth service, so the browser catches
 // a short password before the round trip. The server still enforces it.
@@ -36,48 +37,56 @@ export function SignUp() {
   }
 
   return (
-    <section className="form-page">
-      <h1>Create your account</h1>
+    <section className="mx-auto max-w-md">
+      <h1 className="mb-4 text-3xl font-semibold text-strong">Create your account</h1>
       {error && <Problem message={error} />}
       <form onSubmit={submit}>
-        <label className="field">
-          <span>Name</span>
-          <input type="text" value={name} required onChange={(e) => setName(e.target.value)} />
+        <label className="mb-4 block">
+          <span className="mb-1 block text-sm text-muted">Name</span>
+          <input
+            type="text"
+            value={name}
+            required
+            className={field}
+            onChange={(e) => setName(e.target.value)}
+          />
         </label>
-        <label className="field">
-          <span>Email</span>
+        <label className="mb-4 block">
+          <span className="mb-1 block text-sm text-muted">Email</span>
           <input
             type="email"
             value={email}
             required
             autoComplete="email"
+            className={field}
             onChange={(e) => setEmail(e.target.value)}
           />
         </label>
-        <label className="field">
-          <span>Password</span>
+        <label className="mb-4 block">
+          <span className="mb-1 block text-sm text-muted">Password</span>
           <input
             type="password"
             value={password}
             required
             minLength={MIN_PASSWORD}
             autoComplete="new-password"
+            className={field}
             onChange={(e) => setPassword(e.target.value)}
           />
-          <small className="muted">At least {MIN_PASSWORD} characters.</small>
+          <small className="mt-1 block text-muted">At least {MIN_PASSWORD} characters.</small>
         </label>
-        <label className="field">
-          <span>I am</span>
-          <select value={role} onChange={(e) => setRole(e.target.value)}>
+        <label className="mb-4 block">
+          <span className="mb-1 block text-sm text-muted">I am</span>
+          <select value={role} className={field} onChange={(e) => setRole(e.target.value)}>
             <option value="customer">Buying tickets</option>
             <option value="organizer">Running events</option>
           </select>
         </label>
-        <button type="submit" className="primary" disabled={busy}>
+        <button type="submit" className={primaryButton} disabled={busy}>
           {busy ? 'Creating…' : 'Create account'}
         </button>
       </form>
-      <p className="muted">
+      <p className="mt-4 text-muted">
         Already have an account? <Link to="/sign-in">Sign in</Link>.
       </p>
     </section>

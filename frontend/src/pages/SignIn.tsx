@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth-context'
 import { Problem } from '../components/Feedback'
+import { field, primaryButton } from '../components/ui'
 
 export function SignIn() {
   const { user, signIn } = useAuth()
@@ -32,35 +33,37 @@ export function SignIn() {
   }
 
   return (
-    <section className="form-page">
-      <h1>Sign in</h1>
+    <section className="mx-auto max-w-md">
+      <h1 className="mb-4 text-3xl font-semibold text-strong">Sign in</h1>
       {error && <Problem message={error} />}
       <form onSubmit={submit}>
-        <label className="field">
-          <span>Email</span>
+        <label className="mb-4 block">
+          <span className="mb-1 block text-sm text-muted">Email</span>
           <input
             type="email"
             value={email}
             required
             autoComplete="email"
+            className={field}
             onChange={(e) => setEmail(e.target.value)}
           />
         </label>
-        <label className="field">
-          <span>Password</span>
+        <label className="mb-4 block">
+          <span className="mb-1 block text-sm text-muted">Password</span>
           <input
             type="password"
             value={password}
             required
             autoComplete="current-password"
+            className={field}
             onChange={(e) => setPassword(e.target.value)}
           />
         </label>
-        <button type="submit" className="primary" disabled={busy}>
+        <button type="submit" className={primaryButton} disabled={busy}>
           {busy ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
-      <p className="muted">
+      <p className="mt-4 text-muted">
         No account yet? <Link to="/sign-up">Create one</Link>.
       </p>
     </section>
