@@ -1,0 +1,146 @@
+x-go: &go
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: delta-one
+  restart: unless-stopped
+  environment: &go-env
+    DB_HOST: postgres
+    DB_PORT: "5432"
+    DB_USER: postgres
+    DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    DB_SSLMODE: disable
+    AUTH_DB_NAME: delta_auth
+    CATALOG_DB_NAME: delta_catalog
+    BOOKING_DB_NAME: delta_booking
+    PAYMENT_DB_NAME: delta_payment
+    REDIS_ADDR: redis:6379
+    JWT_SECRET: ${JWT_SECRET:-dev-only-change-me-not-for-production}
+    AUTH_URL: http://auth:8081
+    CATALOG_URL: http://catalog:8082
+    BOOKING_URL: http://booking:8083
+    PAYMENT_URL: http://payment:8084
+    FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost}
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:8
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  auth:
+    <<: *go
+    command: ["/usr/local/bin/auth"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:8081/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  catalog:
+    <<: *go
+    command: ["/usr/local/bin/catalog"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:8082/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  booking:
+    <<: *go
+    command: ["/usr/local/bin/booking"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      catalog:
+        condition: service_healthy
+      payment:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:8083/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  payment:
+    <<: *go
+    command: ["/usr/local/bin/payment"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:8084/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  notification:
+    <<: *go
+    command: ["/usr/local/bin/notification"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:8085/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  gateway:
+    <<: *go
+    command: ["/usr/local/bin/gateway"]
+    ports:
+      - "8080:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+      catalog:
+        condition: service_healthy
+      booking:
+        condition: service_healthy
+      payment:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      gateway:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
